@@ -4,10 +4,15 @@ pipeline{
     }
     
     stages{
-        stage("Installing 
+        stage("Installing softwares"){
+            steps{
+                sh '''
+                    sudo apt update -y && sudo apt install python3 git python3-pip python3-flask gunicorn  -y
+                }
+
         stage("CHeckout "){
             steps{
-                git branch: "main", url: "https://github.com/pavankalyan524/Python-Flask"
+                git branch: "master", url: "https://github.com/pavankalyan524/Python-Flask"
             }
         }
         stage("run tests"){
