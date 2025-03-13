@@ -3,7 +3,7 @@ pipeline{
         label 'node-jenkins'
     }
     
-    env {
+    environment {
         docker_username = "pavankalyan524"
     }
     
