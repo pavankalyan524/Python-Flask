@@ -5,7 +5,6 @@ pipeline{
     
     environment {
         docker_username = "pavankalyan524"
-        docker_password = credentials('docker-hub-password')
     }
     
     stages{
@@ -48,14 +47,15 @@ pipeline{
 
         stage("Pushin Image to Hub"){
             steps{
+                withCredentials([string(credentialsId: 'docker-hub-password', variable: 'docker_password')]) {
                 sh '''
                 echo $docker_password | docker login -u $docker_username --password-stdin
                 sudo docker tag testing-image $docker_username/testing-jenkins:version1
                 sudo docker image push $docker_username/testing-jenkins:version1
                 '''
+                }
             }
         }
-        
         stage("After Pushing"){
             steps{
                 echo "Image Pushed To Hub Successfully.."
