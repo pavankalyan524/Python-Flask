@@ -3,30 +3,46 @@ pipeline{
         label 'node-jenkins'
     }
     
+    env {
+        docker_username = "pavankalyan524"
+    }
+    
     stages{
-        stage("CHeckout "){
-            steps{
-                git branch: "main", url: "https://github.com/pavankalyan524/Python-Flask"
-            }
-        }
-        stage("run tests"){
-            steps{
-                sh 'pytest -v'
-            }
-        }
         
-        stage("Deployment"){
+        stage("Checkout "){
             steps{
+                git branch: 'main', url: "https://github.com/pavankalyan524/Python-Flask.git"
+            }
+        }
+        stage("Docker Installation"){
+            steps{
+                sh 'sudo apt install docker.io -y'
                 
-                sshagent(['node-jenkins']){
-                    sh '''
-                    cd /home/ubuntu/Python-Flask/production/
-                     sudo apt update && sudo apt install git python3 python3-pip -y
-                    pip install -r requirements.txt && gunicorn -y
-                    gunicorn -w 1 -b 0.0.0.0:8000 wsgi:app --daemon
-                    '''
+            }
+            
+        }
+        stage("Building Docker Image"){
+            steps{
+                sh '''
+                cd "$WORKSPACE/production/"
+                sudo docker build -t testing-image .
+                sudo docker run -d --name python-flask-container -p 8000:8000 testing-image
+                '''
+            }
+        }
+        stage("Pushing Image on to Hub"){
+            steps{
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']){
+                sh '''
+                sudo docker tag testing-image $docker_username/testing-jenkins:version1
+                sudo docker image push $docker_username/testing-jenkins:version1
+                '''
                 }
-                
+            }
+        }
+        stage("After Pushing"){
+            steps{
+                echo "Image Pushed To Hub Successfully.."
             }
         }
     }
