@@ -50,6 +50,8 @@ pipeline{
             steps{
                 sh '''
                 echo $docker_password | docker login -u $docker_username --password-stdin
+                sudo docker tag testing-image $docker_username/testing-jenkins:version1
+                sudo docker image push $docker_username/testing-jenkins:version1
                 '''
             }
         }
