@@ -48,7 +48,9 @@ pipeline{
 
         stage("Pushin Image to Hub"){
             steps{
+                sh '''
                 echo $docker_password | docker login -u $docker_username --password-stdin
+                '''
             }
         }
         
