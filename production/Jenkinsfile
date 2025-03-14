@@ -1,6 +1,6 @@
 pipeline{
     agent {
-        label 'node-jenkins'
+        label 'node-jenkins' # You Must Configure slave node in Jenkins 
     }
     stages{
         stage("Checkout"){
