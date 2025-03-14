@@ -1,0 +1,55 @@
+pipeline{
+    agent {
+        label 'node-jenkins'
+    }
+    stages{
+        stage("Checkout"){
+            steps{
+                git branch: "master", url: "https://github.com/pavankalyan524/Python-Flask.git"
+            }
+        }
+        
+        stage("Image Creation"){
+            steps{
+                sh '''
+                echo $WORKSPACE
+                cd "$WORKSPACE/production"
+                docker build -t ecr-image .
+                '''
+            }
+        }
+        
+        stage("Creating Ecr Repo"){
+            steps{
+                sh 
+                '''
+                aws ecr create-repository --repository-name docker_repo --region us-east-1
+                '''
+            }
+        }
+        
+        stage("Login to repo"){
+            steps{
+                sh '''
+                aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 010526262752.dkr.ecr.us-east-1.amazonaws.com
+                '''
+            }
+        }
+        
+        stage("Tagging Docker Image"){
+            steps{
+                sh '''
+                docker tag ecr-image  010526262752.dkr.ecr.us-east-1.amazonaws.com/docker_repo:latest
+                '''
+            }
+        }
+        
+        stage("Pushing an Image"){
+            steps{
+                sh'''
+                docker push 010526262752.dkr.ecr.us-east-1.amazonaws.com/docker_repo:latest
+                '''
+            }
+        }
+    }
+}
