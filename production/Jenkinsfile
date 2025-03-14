@@ -21,8 +21,7 @@ pipeline{
         
         stage("Creating Ecr Repo"){
             steps{
-                sh 
-                '''
+                sh '''
                 aws ecr create-repository --repository-name docker_repo --region us-east-1
                 '''
             }
