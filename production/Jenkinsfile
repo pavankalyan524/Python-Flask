@@ -8,7 +8,45 @@ pipeline{
                 git branch: "master", url: "https://github.com/pavankalyan524/Python-Flask.git"
             }
         }
+        stage("Unit Testing "){  # We use pytest module for unit testing our code (app_test.py) 
+            steps{
+                sh 'pytest -v --disable-warnings'
+            }
+        }
         
+        stage("static code analysis"){  
+            environment{
+                sonar_url = "http://54.227.60.7:9000" # Provide correct sonarqube server Url 
+            }
+            steps{
+                
+                withCredentials([string(credentialsId: 'sonar', variable: 'sonar_token'  )]){ #'sonar' has sonarqube token, It is stored inside jenkins credentials store 
+                    sh '''
+                    /opt/sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+                    -Dsonar.projectKey=Demo \
+                    -Dsonar.sources="${WORKSPACE}"/production \
+                    -Dsonar.host.url=${sonar_url} \
+                    -Dsonar.login=${sonar_token}
+                    '''
+                }
+            }
+        }
+        stage("Code Quality.."){
+            steps{
+                sh 'flake8 --exit-zero --output-file=flake8-report.txt'
+            }
+        }
+        stage("Scan for Security Vulnerabilities"){
+            steps{
+                sh 'bandit -r . -o security-report.txt -f txt'
+            }
+        }
+        stage("Generate Reports"){
+            steps{
+                sh 'pytest --junitxml=pytest-report.xml'
+            }
+        }
+
         stage("Image Creation"){
             steps{
                 sh '''
@@ -18,7 +56,6 @@ pipeline{
                 '''
             }
         }
-        
         stage("Creating Ecr Repo"){
             steps{
                 sh '''
@@ -26,7 +63,6 @@ pipeline{
                 '''
             }
         }
-        
         stage("Login to repo"){
             steps{
                 sh '''
@@ -34,18 +70,10 @@ pipeline{
                 '''
             }
         }
-        
-        stage("Tagging Docker Image"){
-            steps{
-                sh '''
-                docker tag ecr-image  010526262752.dkr.ecr.us-east-1.amazonaws.com/docker_repo:latest
-                '''
-            }
-        }
-        
-        stage("Pushing an Image"){
+        stage("Tagging & Pushing an Image to ECR "){
             steps{
                 sh'''
+                docker tag ecr-image  010526262752.dkr.ecr.us-east-1.amazonaws.com/docker_repo:latest
                 docker push 010526262752.dkr.ecr.us-east-1.amazonaws.com/docker_repo:latest
                 '''
             }
